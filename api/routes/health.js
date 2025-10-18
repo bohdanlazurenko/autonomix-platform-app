@@ -1,8 +1,16 @@
 import express from "express";
+import { getZAIClient } from "../llm/zai-client.js";
 
 const router = express.Router();
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
+  const llmClient = getZAIClient();
+  let llmStatus = { enabled: false };
+  
+  if (llmClient.enabled) {
+    llmStatus = await llmClient.healthCheck();
+  }
+  
   const health = {
     status: "healthy",
     timestamp: new Date().toISOString(),
@@ -14,9 +22,7 @@ router.get("/", (req, res) => {
       vercel: !!process.env.VERCEL_TOKEN,
       cloudflare: !!process.env.CLOUDFLARE_API_TOKEN,
       llm: {
-        pm: !!process.env.PM_MODEL_KEY,
-        research: !!process.env.RESEARCH_MODEL_KEY,
-        dev: !!process.env.DEV_MODEL_KEY,
+        zai: llmStatus,
       },
     },
   };
